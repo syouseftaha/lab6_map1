@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lab 6 - Map 1</title>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin=""/>
+        <link href='https://fonts.googleapis.com/css?family=Calibri' rel='stylesheet'>
+
+        <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+        integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+        crossorigin=""></script>
+
+        <!-- Load animation tweening library requirement for CanvasFlowMapLayer -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/16.6.0/Tween.min.js"></script>
+
+        <!-- Load CanvasFlowMapLayer; change the path (relative URL) if necessary -->
+        <script src="CanvasFlowmapLayer.js"></script>
+
+        <script type="text/javascript" src="inflow.js"></script>
+
+        <style type="text/css">
+          html, body { margin: 0; padding: 0; height: 100%; }
+          #map { min-height: 100%; }
+        </style>
+
+        <style>
+          .title {
+              padding: 6px 8px;
+              font-family: 'Calibri';font-size: 22px;
+              background: white;
+              background: rgba(255,255,255,0.8);
+              box-shadow: 0 0 15px rgba(0,0,0,0.2);
+              border-radius: 5px;
+          }
+        </style>
+
+    </head>
+
+    <body>
+        <div id="map"></div>
+
+        <script type="text/javascript">
+
+          var map = L.map('map', {
+              center: [38.16, -96.96],
+              zoom: 5
+          });
+
+          L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+               attribution: '@ <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            }).addTo(map);
+
+          L.canvasFlowmapLayer(data, { //data is the variable name I used for defining the cook.js data
+            originAndDestinationFieldIds: {
+              originUniqueIdField: 'GEOID_B',  //origin ID, use GEOID_B if you want to reverse the flow
+              originGeometry: { //origin coordinates - Cook County as outflow is being mapped in the example
+                x: 'B_lon',
+                y: 'B_lat'
+              },
+              destinationUniqueIdField: 'GEOID_A', //destination ID
+              destinationGeometry: { //destination coordinates
+                x: 'A_lon',
+                y: 'A_lat'
+              }
+            },
+
+            canvasBezierStyle: {
+            //This example demonstrates the use of graduated symbols (class breaks) for the flowlines
+            //Other options: https://developers.arcgis.com/documentation/common-data-types/renderer-objects.htm
+              type: 'classBreaks',
+              field: 'Flow_B2A', // The field/value to be used for symbolizing the lines
+
+              // Define the classes and symbols below
+              classBreakInfos: [{
+                classMinValue: 10000,  // break values of this class, using field values defined above
+                classMaxValue: 16000,
+                symbol: {  // Define the symbology for this class
+                           // See an example from the documentation:https://github.com/jwasilgeo/Leaflet.Canvas-Flowmap-Layer/blob/master/docs/class-breaks-symbology/index.html#L94-L137
+                  strokeStyle: '#005a32',  // flow line color
+                  lineWidth: 12,  // flow line width
+                  lineCap: 'round',  // shape of the stroke end
+                }
+              }, {  // another class
+                classMinValue: 6000,
+                classMaxValue: 9999,
+                symbol: {
+                  strokeStyle: '#238b45',
+                  lineWidth: 8,
+                  lineCap: 'round',
+                }
+              }, {  // one more class
+                classMinValue: 3000,
+                classMaxValue: 5999,
+                symbol: {
+                  strokeStyle: '#41ab5d',
+                  lineWidth: 5,
+                  lineCap: 'round',
+                }
+              }, {  // more classes if needed
+                  classMinValue: 0,
+                  classMaxValue: 2999,
+                  symbol: {
+                    strokeStyle: '#74c476',
+                    lineWidth: 2,
+                    lineCap: 'round',
+                  }
+              }],
+            },
+            // Some options to customize the flow map, check out the link below for more
+            // https://github.com/jwasilgeo/Leaflet.Canvas-Flowmap-Layer#options-and-property-summary
+            pathDisplayMode: 'all',
+            animationStarted: true,
+            animationEasingFamily: 'Cubic', // Compare the options:
+                                            // https://jwasilgeo.github.io/Leaflet.Canvas-Flowmap-Layer/docs/comparison/
+            animationEasingType: 'In',
+            animationDuration: 2000,  // in millisecond, the larger the number the slower
+          }).addTo(map);
+
+          var title = L.control({position: 'topright'}); // position of the title
+
+          title.onAdd = function (map) {
+              this._div = L.DomUtil.create('div', 'title'); // create a div with a class "title"
+              this._div.innerHTML = "<h3>TOP 10 Gross Inflow to Cook County, Illinois</h3>";  // Title text, may use html to customize
+              return this._div;
+          };
+
+          title.addTo(map);
+
+        </script>
+   </body>
+</html>
